@@ -126,7 +126,7 @@ bukkit {
     name = "InstantTNT"
 
     main = "$group.${project.name}.InstantTnt"
-    apiVersion = "1.20.6"
+    apiVersion = "1.21.1"
     version = project.version.toString()
 
     authors = listOf(

@@ -124,6 +124,7 @@ listOf(
 
 bukkit {
     name = "InstantTNT"
+    description = "A Minecraft plugin that adds TNT which explodes instantly, inspired by Bad Piggies."
 
     main = "$group.${project.name}.InstantTnt"
     apiVersion = "1.21.1"

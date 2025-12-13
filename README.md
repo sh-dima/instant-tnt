@@ -1,6 +1,8 @@
 Instant TNT
 ===========
 
+TNT that explodes instantly upon contact with any entity.
+
 A Minecraft plugin that adds TNT which explodes instantly, inspired by Bad Piggies.
 
 Links

@@ -5,7 +5,7 @@ import org.bukkit.block.Block
 import org.bukkit.entity.Entity
 import kotlin.math.floor
 
-fun Entity.getTouchedBlocks(locationOverride: Location = this.location): List<Block> {
+fun Entity.getTouchedBlocks(locationOverride: Location = this.location): MutableList<Block> {
     val box = boundingBox
         box.expand(0.01)
 

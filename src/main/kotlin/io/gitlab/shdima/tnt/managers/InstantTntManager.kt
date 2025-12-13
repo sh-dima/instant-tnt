@@ -14,9 +14,10 @@ import org.bukkit.persistence.PersistentDataType
 import org.bukkit.util.Vector
 import java.io.*
 import kotlin.math.floor
-import kotlin.math.pow
 
 class InstantTntManager(private val plugin: InstantTnt) {
+    var blocksToDetonate = mutableSetOf<Vector>()
+
     private val instantTntDataFile = File(plugin.dataFolder, "data/instant-tnt-blocks.json")
     private val instantTntBlocks = mutableListOf<Vector>()
 
@@ -44,8 +45,8 @@ class InstantTntManager(private val plugin: InstantTnt) {
         return instantTntBlocks.contains(blockCoordinates)
     }
 
-    fun isInstantTnt(block: Block): Boolean {
-        return isInstantTnt(block.location.toVector()) && block.type == Material.TNT
+    fun isInstantTnt(block: Block?): Boolean {
+        return block?.type == Material.TNT && isInstantTnt(block.location.toVector())
     }
 
     fun isInstantTnt(itemStack: ItemStack): Boolean {
@@ -123,7 +124,7 @@ class InstantTntManager(private val plugin: InstantTnt) {
         return significantValue > plugin.config.minimumCollisionDetonationSpeed / 20.0
     }
 
-    private fun detonateInstantTnt(instantTnt: Block, cause: Entity?) {
+    fun detonateInstantTnt(instantTnt: Block, cause: Entity?) {
         instantTnt.type = Material.AIR
 
         val power = plugin.config.power.toFloat()
@@ -142,61 +143,38 @@ class InstantTntManager(private val plugin: InstantTnt) {
         removeInstantTnt(instantTnt)
     }
 
-    private fun chainDetonateInstantTnt(startingTnt: Block, blocksToDetonate: MutableList<Vector>): List<Vector> {
-        var blocksToIterateThrough = mutableListOf<Vector>()
+    private fun chainDetonateInstantTnt(startingTnt: Block): MutableSet<Vector> {
+        val radius = plugin.config.spreadRadiusBlocks
+        val radiusSquared = radius * radius
 
-        val explosionRadiusBlocks = plugin.config.spreadRadiusBlocks
-        val cubeVolume = (explosionRadiusBlocks * 2).pow(3.0)
+        val remaining = instantTntBlocks.toMutableSet()
+        val result = mutableSetOf<Vector>()
+        val queue = ArrayDeque<Vector>()
 
-        val totalInstantTnts = instantTntBlocks.size.toDouble()
+        val start = startingTnt.location.toVector()
+        queue.add(start)
+        result.add(start)
+        remaining.remove(start)
 
-        val center = startingTnt.center.toVector()
+        while (queue.isNotEmpty()) {
+            val current = queue.removeFirst()
 
-        if (cubeVolume < totalInstantTnts) {
-            var x = center.x - explosionRadiusBlocks
-            while (x <= center.x + explosionRadiusBlocks) {
-                var y = center.y - explosionRadiusBlocks
-                while (y <= center.y + explosionRadiusBlocks) {
-                    var z = center.z - explosionRadiusBlocks
-                    while (z <= center.z + explosionRadiusBlocks) {
-                        val location = Vector(x, y, z)
-
-                        val distance = center.distance(location)
-
-                        if (distance > explosionRadiusBlocks) {
-                            z++
-                            continue
-                        }
-
-                        blocksToIterateThrough.add(Vector(x, y, z))
-                        z++
-                    }
-                    y++
+            val iterator = remaining.iterator()
+            while (iterator.hasNext()) {
+                val candidate = iterator.next()
+                if (current.distanceSquared(candidate) <= radiusSquared) {
+                    iterator.remove()
+                    result.add(candidate)
+                    queue.add(candidate)
                 }
-                x++
             }
-        } else {
-            blocksToIterateThrough = instantTntBlocks.filter { it.center.distance(center) <= explosionRadiusBlocks }.toMutableList()
         }
 
-        val world = startingTnt.world
-
-        for (tntBlockLocation in blocksToIterateThrough) {
-            if (blocksToDetonate.contains(tntBlockLocation)) continue
-
-            blocksToDetonate.add(tntBlockLocation)
-
-            chainDetonateInstantTnt(
-                world.getBlockAt(Location(world, tntBlockLocation.x, tntBlockLocation.y, tntBlockLocation.z)),
-                blocksToDetonate
-            )
-        }
-
-        return blocksToDetonate
+        return result
     }
 
     fun chainDetonateInstantTnt(startingTnt: Block, cause: Entity?) {
-        val blocksToDetonate = chainDetonateInstantTnt(startingTnt, ArrayList())
+        blocksToDetonate = chainDetonateInstantTnt(startingTnt)
 
         val explosionOrigin = startingTnt.center.toVector()
         val world = startingTnt.world

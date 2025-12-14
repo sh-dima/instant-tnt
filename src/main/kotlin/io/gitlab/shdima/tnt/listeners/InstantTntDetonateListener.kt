@@ -4,6 +4,7 @@ import io.gitlab.shdima.tnt.InstantTnt
 import org.bukkit.GameMode
 import org.bukkit.Material
 import org.bukkit.entity.Player
+import org.bukkit.entity.TNTPrimed
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.block.TNTPrimeEvent
@@ -16,7 +17,7 @@ class InstantTntDetonateListener(private val plugin: InstantTnt) : Listener {
         val manager = plugin.instantTntManager
         if (!manager.isInstantTnt(tnt)) return
 
-        if (manager.isInstantTnt(event.primingBlock)) { // Will be handled by instant TNT manager
+        if (event.cause == TNTPrimeEvent.PrimeCause.EXPLOSION && event.primingEntity !is TNTPrimed && event.primingBlock == null) { // Will be handled by instant TNT manager
             event.isCancelled = true; return
         }
 

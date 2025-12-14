@@ -138,6 +138,7 @@ class InstantTntManager(private val plugin: InstantTnt) {
 
     fun detonateInstantTnt(instantTnt: Block, cause: Entity?) {
         instantTnt.type = Material.AIR
+        removeInstantTnt(instantTnt)
 
         val power = plugin.config.power.toFloat()
         val shouldSetFire = plugin.config.setsFire
@@ -151,8 +152,6 @@ class InstantTntManager(private val plugin: InstantTnt) {
             shouldBreakBlocks,
             false
         )
-
-        removeInstantTnt(instantTnt)
     }
 
     fun chainDetonateInstantTnt(startingTnt: Block, entity: Entity?) {

@@ -15,9 +15,9 @@ Links
 License
 -------
 
-© 2025 [Дима Ш.][author]
+© 2025-2026 [Дима Ш.][author]
 
-[Instant TNT](./) is licensed under the [AGPL 3.0](./LICENSE) only.
+Instant TNT is licensed under the [AGPL 3.0](./LICENSE) only.
 
 Disclaimer
 ----------
